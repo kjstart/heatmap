@@ -1,0 +1,84 @@
+<html>
+
+<head>
+  <meta name="referrer" content="no-referrer" />
+  <title>Heat Map</title>
+  <!--script>
+  function resizeIframe(obj) {
+    obj.style.height = obj.contentWindow.document.documentElement.scrollHeight + 'px';
+  }
+-->
+  <!-- </script> -->
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+  <script src="/simpleheat.js"></script>
+</head>
+
+<body>
+  <iframe id="pageframe" frameborder="0" width="1926px" height="5891px" scrolling="no" src="http://na.demo.eloquademo.com/LP=120"
+    style="float:left;"></iframe>
+  <div style="position:absolute; z-index:99; width:1926px;height:5891px;float: left;">
+    <canvas id="canvas" width="1926px" height="5891px"></canvas>
+  </div>
+  <div id="rainbow"
+    style="opacity: 0.8;position:absolute; z-index:10; width:1926px;height:5891px;float: left; background: #0a065d;">
+  </div>
+
+
+</body>
+<script>
+  window.onload=function(){
+    // console.log(document.getElementById("pageframe").style.width);
+    console.log(document.body.scrollWidth);
+    // document.getElementById("pageframe").style.width=document.body.scrollWidth+"px";
+    // console.log(document.getElementById("pageframe").style.width);
+  }
+  var colors = new Array();
+
+  // colors[0]='#0a065d';
+  // colors[1]='#1d44a3';
+  // colors[2]='#7fad2c';
+  // colors[3]='#cfe223';
+  // colors[4]='#ffff00';
+  // colors[5]='#ffffff';
+
+  colors[0] = '#0a065d';
+  colors[1] = '#223f87';
+  colors[2] = '#25512f';
+  colors[3] = '#7fad2c';
+  colors[4] = '#cfe223';
+  colors[5] = '#ffff00';
+
+  $.get('http://localhost:8081/page_event/position/'+getQueryString('url_hash')).done(function (res) {
+    var jo = JSON.parse(res);
+    if (jo.length > 0) {
+      var colorStr = "linear-gradient(";
+      for (var i = 0; i < jo.length; i++) {
+        colorStr += ' ' + colors[jo[i].color] + ' ' + jo[i].position + '%,';
+      }
+      colorStr = colorStr.substring(0, colorStr.length - 1) + ")";
+      document.getElementById('rainbow').style.background = colorStr;
+    }
+  });
+  var heat = simpleheat('canvas');
+  $.get('http://localhost:8081/page_event/click/'+getQueryString('url_hash')+'?pageWidth=' + document.body.scrollWidth + "&pageHeight=" + document.body.scrollHeight).done(function (res) {
+    var jo = JSON.parse(res);
+    heat.data(jo.data);
+    heat.max(jo.max);
+    heat.draw();
+  });
+
+  function getQueryString(name) { 
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
+      var r = window.location.search.substr(1).match(reg);
+      var context = ""; 
+      if (r != null) 
+         context = r[2]; 
+      reg = null; 
+      r = null; 
+      return context == null || context == "" || context == "undefined" ? "" : context; 
+    }
+</script>
+
+</html>
